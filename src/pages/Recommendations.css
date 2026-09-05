@@ -1,0 +1,543 @@
+/* =========================
+   RECOMMENDATIONS PAGE
+========================= */
+
+.recommendations-page {
+  min-height: 100vh;
+
+  background: #090909;
+
+  color: white;
+
+  padding-bottom: 60px;
+}
+
+
+/* =========================
+   NAVBAR
+========================= */
+
+.navbar {
+  height: 75px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  padding: 0 55px;
+
+  background: rgba(9, 9, 9, 0.96);
+
+  border-bottom: 1px solid #222;
+
+  position: sticky;
+
+  top: 0;
+
+  z-index: 10;
+}
+
+.logo {
+  font-size: 21px;
+
+  font-weight: 700;
+
+  min-width: 190px;
+}
+
+.logo span {
+  margin-right: 8px;
+}
+
+.nav-links {
+  display: flex;
+
+  gap: 35px;
+}
+
+.nav-links a {
+  color: #888;
+
+  text-decoration: none;
+
+  font-size: 14px;
+
+  transition: 0.3s;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  color: #e5095a;
+}
+
+.profile-circle {
+  width: 38px;
+
+  height: 38px;
+
+  border-radius: 50%;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  background: #e5095a;
+
+  font-weight: bold;
+}
+
+
+/* =========================
+   HEADER
+========================= */
+
+.recommendations-header {
+  padding: 50px;
+}
+
+.recommendations-header p {
+  color: #e5095a;
+
+  font-size: 12px;
+
+  letter-spacing: 2px;
+
+  font-weight: bold;
+
+  margin-bottom: 10px;
+}
+
+.recommendations-header h1 {
+  font-size: 40px;
+
+  margin-bottom: 12px;
+}
+
+.recommendations-header span {
+  color: #999;
+
+  font-size: 16px;
+}
+
+
+/* =========================
+   AI MESSAGE
+========================= */
+
+.ai-message {
+  margin: 0 50px 25px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 18px;
+
+  background: #111;
+
+  border: 1px solid #292929;
+
+  border-radius: 12px;
+
+  padding: 22px;
+}
+
+.ai-icon {
+  width: 50px;
+
+  height: 50px;
+
+  flex-shrink: 0;
+
+  background: #e5095a;
+
+  border-radius: 12px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  font-size: 25px;
+}
+
+.ai-message h3 {
+  margin-bottom: 6px;
+}
+
+.ai-message p {
+  color: #888;
+
+  font-size: 14px;
+}
+
+
+/* =========================
+   PREFERENCE BOX
+========================= */
+
+.preference-box {
+  margin: 0 50px 40px;
+
+  padding: 20px 22px;
+
+  background: #111;
+
+  border: 1px solid #292929;
+
+  border-radius: 12px;
+}
+
+.preference-label {
+  color: #888;
+
+  font-size: 11px;
+
+  letter-spacing: 2px;
+
+  margin-bottom: 12px;
+}
+
+.genre-tags {
+  display: flex;
+
+  gap: 10px;
+
+  flex-wrap: wrap;
+}
+
+.genre-tags span {
+  padding: 8px 14px;
+
+  border-radius: 20px;
+
+  background: rgba(229, 9, 90, 0.12);
+
+  border: 1px solid #e5095a;
+
+  color: #e5095a;
+
+  font-size: 13px;
+
+  font-weight: 600;
+}
+
+
+/* =========================
+   RECOMMENDATION SECTION
+========================= */
+
+.recommendation-section {
+  padding: 0 50px;
+}
+
+.section-heading {
+  margin-bottom: 25px;
+}
+
+.section-heading p {
+  color: #e5095a;
+
+  font-size: 11px;
+
+  letter-spacing: 2px;
+
+  margin-bottom: 7px;
+}
+
+.section-heading h2 {
+  font-size: 30px;
+}
+
+
+/* =========================
+   MOVIE GRID
+========================= */
+
+.recommendation-grid {
+  display: grid;
+
+  grid-template-columns: repeat(4, 210px);
+
+  gap: 35px 25px;
+}
+
+
+/* =========================
+   MOVIE CARD
+========================= */
+
+.recommendation-card {
+  width: 210px;
+
+  color: white;
+
+  text-decoration: none;
+
+  display: block;
+
+  cursor: pointer;
+
+  transition: transform 0.3s;
+}
+
+.recommendation-card:hover {
+  transform: translateY(-7px);
+}
+
+
+/* =========================
+   POSTER
+========================= */
+
+.recommendation-poster {
+  width: 210px;
+
+  height: 315px;
+
+  border-radius: 10px;
+
+  overflow: hidden;
+
+  position: relative;
+
+  margin-bottom: 14px;
+
+  border: 1px solid #292929;
+}
+
+.recommendation-poster img {
+  width: 100%;
+
+  height: 100%;
+
+  object-fit: cover;
+
+  display: block;
+}
+
+
+/* =========================
+   RATING
+========================= */
+
+.recommendation-poster span {
+  position: absolute;
+
+  top: 12px;
+
+  right: 12px;
+
+  background: rgba(0, 0, 0, 0.8);
+
+  padding: 6px 9px;
+
+  border-radius: 6px;
+
+  font-size: 13px;
+
+  color: #ffd166;
+}
+
+
+/* =========================
+   TEXT
+========================= */
+
+.recommendation-card h3 {
+  font-size: 17px;
+
+  margin-bottom: 6px;
+
+  font-weight: 600;
+}
+
+.recommendation-card p {
+  color: #999;
+
+  font-size: 14px;
+}
+
+
+/* =========================
+   EMPTY STATE
+========================= */
+
+.no-recommendations {
+  min-height: 400px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  text-align: center;
+
+  padding: 40px;
+}
+
+.empty-ai-icon {
+  width: 75px;
+
+  height: 75px;
+
+  border-radius: 50%;
+
+  background: #151515;
+
+  border: 1px solid #292929;
+
+  color: #e5095a;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  font-size: 35px;
+
+  margin-bottom: 20px;
+}
+
+.no-recommendations h2 {
+  font-size: 25px;
+
+  margin-bottom: 10px;
+}
+
+.no-recommendations p {
+  color: #888;
+
+  max-width: 450px;
+
+  line-height: 1.6;
+
+  margin-bottom: 25px;
+}
+
+
+/* =========================
+   DISCOVER BUTTON
+========================= */
+
+.discover-button {
+  padding: 12px 22px;
+
+  background: #e5095a;
+
+  color: white;
+
+  text-decoration: none;
+
+  border-radius: 7px;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  transition: 0.3s;
+}
+
+.discover-button:hover {
+  background: #c7074e;
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 1000px) {
+
+  .recommendation-grid {
+    grid-template-columns: repeat(3, 210px);
+  }
+
+}
+
+
+@media (max-width: 750px) {
+
+  .navbar {
+    padding: 0 20px;
+  }
+
+  .nav-links {
+    display: none;
+  }
+
+  .recommendations-header {
+    padding: 35px 25px;
+  }
+
+  .recommendations-header h1 {
+    font-size: 32px;
+  }
+
+  .ai-message {
+    margin: 0 25px 25px;
+  }
+
+  .preference-box {
+    margin: 0 25px 35px;
+  }
+
+  .recommendation-section {
+    padding: 0 25px;
+  }
+
+  .recommendation-grid {
+    grid-template-columns: repeat(2, 210px);
+  }
+
+}
+
+/* =========================
+   WHY RECOMMENDED
+========================= */
+
+.why-recommended {
+  margin-top: 10px;
+  padding: 8px 10px;
+
+  background: rgba(229, 9, 90, 0.08);
+
+  border-left: 2px solid #e5095a;
+
+  border-radius: 4px;
+
+  color: #888;
+
+  font-size: 11px;
+
+  line-height: 1.4;
+}
+
+/* =========================
+   WHY RECOMMENDED
+========================= */
+
+.why-recommended {
+  margin-top: 10px;
+  padding: 8px 10px;
+  background: rgba(229, 9, 90, 0.08);
+  border-left: 2px solid #e5095a;
+  border-radius: 4px;
+  color: #888;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.why-recommended strong {
+  color: #e5095a;
+  font-weight: 600;
+}

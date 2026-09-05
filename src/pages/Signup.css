@@ -1,0 +1,116 @@
+.signup-page {
+  min-height: 100vh;
+  display: flex;
+  background: #090909;
+  color: white;
+}
+
+.signup-visual {
+  width: 55%;
+  min-height: 100vh;
+  position: relative;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(9, 9, 9, 0.2),
+      rgba(9, 9, 9, 0.85)
+    ),
+    url("/images/the-odyssey.jpg");
+  background-size: cover;
+  background-position: center;
+}
+
+.signup-visual-overlay {
+  position: absolute;
+  left: 60px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.signup-visual-overlay h1 {
+  font-size: 52px;
+  margin-bottom: 15px;
+}
+
+.signup-visual-overlay p {
+  color: #ccc;
+  font-size: 18px;
+  max-width: 400px;
+}
+
+.signup-form-section {
+  width: 45%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.signup-container {
+  width: 100%;
+  max-width: 430px;
+}
+
+.signup-container h2 {
+  font-size: 34px;
+  margin-bottom: 10px;
+}
+
+.signup-subtitle {
+  color: #888;
+  margin-bottom: 30px;
+  line-height: 1.5;
+}
+
+.signup-container form {
+  display: flex;
+  flex-direction: column;
+}
+
+.signup-container label {
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.signup-container input {
+  height: 48px;
+  background: #151515;
+  border: 1px solid #333;
+  border-radius: 7px;
+  color: white;
+  padding: 0 15px;
+  margin-bottom: 17px;
+  outline: none;
+}
+
+.signup-container input:focus {
+  border-color: #e5095a;
+}
+
+.signup-button {
+  height: 50px;
+  border: none;
+  border-radius: 7px;
+  background: #e5095a;
+  color: white;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 5px;
+}
+
+.signup-button:hover {
+  background: #c7074e;
+}
+
+.login-text {
+  text-align: center;
+  color: #888;
+  margin-top: 22px;
+}
+
+.login-text a {
+  color: #e5095a;
+  text-decoration: none;
+  font-weight: bold;
+}
