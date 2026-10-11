@@ -32,24 +32,23 @@ function History() {
     async function loadHistory() {
       try {
         const data = await api.getWatchHistory();
-          const formatted = data.watch_history.map((h) => {
-            const genresArr = (h.genres || "").split("|").filter(Boolean);
-            const genresStr = genresArr.slice(0, 2).join(" • ");
-            return {
-              id: h.movie_id,
-              numericId: h.movie_id,
-              title: h.title,
-              image: h.poster_url || null,
-              poster: h.poster_url || null,
-              genres: genresArr,
-              info: h.release_year ? `${h.release_year}${genresStr ? ` • ${genresStr}` : ""}` : genresStr,
-              rating: "Watched",
-              watchedAt: h.watched_at ? new Date(h.watched_at).toLocaleDateString() : "",
-            };
-          });
-          setMovies(formatted);
-          return;
-        }
+        const formatted = data.watch_history.map((h) => {
+          const genresArr = (h.genres || "").split("|").filter(Boolean);
+          const genresStr = genresArr.slice(0, 2).join(" • ");
+          return {
+            id: h.movie_id,
+            numericId: h.movie_id,
+            title: h.title,
+            image: h.poster_url || null,
+            poster: h.poster_url || null,
+            genres: genresArr,
+            info: h.release_year ? `${h.release_year}${genresStr ? ` • ${genresStr}` : ""}` : genresStr,
+            rating: "Watched",
+            watchedAt: h.watched_at ? new Date(h.watched_at).toLocaleDateString() : "",
+          };
+        });
+        if (isMounted) setMovies(formatted);
+        return;
       } catch (e) {
         console.warn("Unable to load watch history from API, using local storage:", e);
       }
