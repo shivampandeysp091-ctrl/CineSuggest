@@ -1,269 +1,263 @@
 import "./Home.css";
 import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { getCurrentUser } from "../auth/auth";
+import { api } from "../api/client";
+import MovieCard from "../components/MovieCard";
 
 function Home() {
   const navigate = useNavigate();
 
-  const movies = [
-    {
-      id: "spiderman",
-      title: "Spider-Man: Brand New Day",
-      image: "/images/spiderman-brand-new-day.jpg",
-      rating: "8.0",
-      info: "2026 • Action / Sci-Fi",
-    },
-    {
-      id: "odyssey",
-      title: "The Odyssey",
-      image: "/images/the-odyssey.jpg",
-      rating: "8.4",
-      info: "2026 • Adventure / Drama",
-    },
-    {
-      id: "demon-slayer",
-      title: "Demon Slayer",
-      image: "/images/demon-slayer.jpg",
-      rating: "8.6",
-      info: "2026 • Anime / Action",
-    },
-    {
-      id: "jujutsu-kaisen",
-      title: "Jujutsu Kaisen",
-      image: "/images/jujutsu-kaisen.jpg",
-      rating: "8.5",
-      info: "2026 • Anime / Action",
-    },
-    {
-      id: "inside-out-2",
-      title: "Inside Out 2",
-      image: "/images/inside-out-2.jpg",
-      rating: "8.1",
-      info: "2024 • Animation / Comedy",
-    },
-    {
-      id: "knives-out",
-      title: "Knives Out",
-      image: "/images/knives-out.jpg",
-      rating: "8.0",
-      info: "2019 • Mystery / Crime",
-    },
-    {
-      id: "how-to-train-your-dragon",
-      title: "How to Train Your Dragon",
-      image: "/images/how-to-train-your-dragon.jpg",
-      rating: "8.1",
-      info: "2025 • Fantasy / Adventure",
-    },
-    {
-      id: "fantastic-four",
-      title: "The Fantastic Four: First Steps",
-      image: "/images/fantastic-four-first-steps.jpg",
-      rating: "7.8",
-      info: "2025 • Superhero / Sci-Fi",
-    },
-  ];
+  // ================= USER INFORMATION =================
+  const user = getCurrentUser();
+  const userName =
+    user?.name ||
+    user?.username ||
+    user?.fullName ||
+    "User";
+
+  const userInitial = userName
+    .trim()
+    .charAt(0)
+    .toUpperCase();
+
+  // ================= STATE =================
+  const [searchQuery, setSearchQuery] = useState("");
+  const [trendingMovies, setTrendingMovies] = useState([]);
+  const [topRatedMovies, setTopRatedMovies] = useState([]);
+  const [browseMovies, setBrowseMovies] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // ================= FETCH MOVIES FROM BACKEND =================
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadAllSections() {
+      setIsLoading(true);
+      try {
+        // 1. Trending Movies (from TMDB /trending/movie/week)
+        const trendingPromise = api.getTrending().catch((err) => {
+          console.warn("Error fetching trending movies:", err);
+          return [];
+        });
+
+        // 2. Top Rated Movies (from database tmdb_rating DESC)
+        const topRatedPromise = api.getTopRated(10).catch((err) => {
+          console.warn("Error fetching top rated movies:", err);
+          return [];
+        });
+
+        // 3. Browse Catalog (from database /movies/)
+        const browsePromise = api.getMovies().catch((err) => {
+          console.warn("Error fetching browse movies:", err);
+          return [];
+        });
+
+        const [trendingData, topRatedData, browseData] = await Promise.all([
+          trendingPromise,
+          topRatedPromise,
+          browsePromise,
+        ]);
+
+        if (isMounted) {
+          if (Array.isArray(trendingData)) setTrendingMovies(trendingData);
+          if (Array.isArray(topRatedData)) setTopRatedMovies(topRatedData);
+          if (Array.isArray(browseData)) setBrowseMovies(browseData);
+        }
+      } catch (err) {
+        console.error("Home sections load error:", err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    loadAllSections();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const query = searchQuery.trim();
+    if (!query) {
+      navigate("/search");
+      return;
+    }
+    navigate(`/search?query=${encodeURIComponent(query)}`);
+  };
 
   return (
     <div className="home-page">
-
       {/* ================= NAVBAR ================= */}
-
       <nav className="navbar">
-
         <div className="logo">
-          <span>🎬</span> Cinematic AI
+          <span>🎬</span> CineSuggest
         </div>
 
         <div className="nav-links">
           <Link className="active" to="/home">
             Discover
           </Link>
-
-          <Link to="/recommendations">
-            My Recommendations
-          </Link>
-
-          <Link to="/my-list">
-            My List
-          </Link>
-
-          <Link to="/history">
-            History
-          </Link>
+          <Link to="/recommendations">My Recommendations</Link>
+          <Link to="/my-list">My List</Link>
+          <Link to="/history">History</Link>
         </div>
 
-        <div className="profile">
-          <div className="profile-circle">
-            A
-          </div>
-        </div>
-
+        <Link to="/profile" className="profile-circle" title={userName}>
+          {userInitial}
+        </Link>
       </nav>
 
-
-      {/* ================= WELCOME SECTION ================= */}
-
+      {/* ================= WELCOME / HERO SECTION ================= */}
       <section className="welcome-section">
-
         <div className="welcome-content">
-
-          <p className="small-title">
-            YOUR PERSONAL AI MOVIE GUIDE
-          </p>
-
+          <p className="small-title">YOUR PERSONAL AI MOVIE GUIDE</p>
           <h1>
-            Welcome to <span>Cinematic AI</span>
+            Welcome to <span>CineSuggest</span>
           </h1>
-
           <p className="welcome-text">
-            Discover movies you'll love, personalized just for you.
+            Discover movies you'll love, powered by collaborative AI and real TMDB insights.
           </p>
 
-
-          {/* SEARCH */}
-
-          <div className="search-box">
-
+          {/* SEARCH BOX */}
+          <form className="search-box" onSubmit={handleSearch}>
             <span>🔍</span>
-
             <input
               type="text"
-              placeholder="Search for movies, actors, genres..."
+              placeholder="Search movies by title, actors, genres..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              autoComplete="off"
             />
-
-            <button
-              onClick={() => navigate("/search")}
-            >
-              Search
-            </button>
-
-          </div>
-
+            <button type="submit">Search</button>
+          </form>
         </div>
-
       </section>
 
-
-      {/* ================= TRENDING MOVIES ================= */}
-
+      {/* ================= SECTION 1: TRENDING MOVIES (GET /movies/trending) ================= */}
       <section className="movie-section">
-
         <div className="section-heading">
-
           <div>
-
-            <p className="section-label">
-              TRENDING NOW
-            </p>
-
-            <h2>
-              Trending Movies
-            </h2>
-
+            <p className="section-label">HOT THIS WEEK</p>
+            <h2>Trending Movies</h2>
           </div>
-
-          <button
-            className="view-all"
-            onClick={() => navigate("/search")}
-          >
+          <button className="view-all" onClick={() => navigate("/search")}>
             View All →
           </button>
-
         </div>
-
 
         <div className="movie-grid">
-
-          {movies.map((movie) => (
-
-            <Link
-              key={movie.id}
-              to={`/movie-details/${movie.id}`}
-              className="movie-card"
-            >
-
-              <div className="movie-poster">
-
-                <img
-                  src={movie.image}
-                  alt={movie.title}
+          {trendingMovies.length > 0 ? (
+            trendingMovies.slice(0, 10).map((m) => {
+              const targetId = m.in_catalog === false ? `tmdb-${m.tmdb_id}` : (m.movie_id || m.id);
+              const year = m.release_date ? m.release_date.slice(0, 4) : m.release_year;
+              return (
+                <MovieCard
+                  key={m.tmdb_id || m.movie_id}
+                  id={targetId}
+                  title={m.title}
+                  posterUrl={m.poster_url}
+                  releaseYear={year}
+                  genres={m.genres}
+                  tmdbRating={m.tmdb_rating}
+                  inCatalog={m.in_catalog !== false}
+                  showCatalogBadge={true}
                 />
-
-                <span className="rating">
-                  ★ {movie.rating}
-                </span>
-
-              </div>
-
-              <h3>
-                {movie.title}
-              </h3>
-
-              <p>
-                {movie.info}
-              </p>
-
-            </Link>
-
-          ))}
-
+              );
+            })
+          ) : (
+            isLoading && <p className="loading-text">Loading trending movies...</p>
+          )}
         </div>
-
       </section>
 
-
-      {/* ================= AI RECOMMENDATIONS ================= */}
-
+      {/* ================= SECTION 2: TOP RATED (GET /movies/top-rated) ================= */}
       <section className="movie-section">
-
         <div className="section-heading">
-
           <div>
-
-            <p className="section-label">
-              AI PICKS FOR YOU
-            </p>
-
-            <h2>
-              Recommended For You
-            </h2>
-
+            <p className="section-label">CRITICALLY ACCLAIMED</p>
+            <h2>Top Rated</h2>
           </div>
-
+          <button className="view-all" onClick={() => navigate("/search")}>
+            Explore All →
+          </button>
         </div>
 
+        <div className="movie-grid">
+          {topRatedMovies.length > 0 ? (
+            topRatedMovies.slice(0, 10).map((m) => (
+              <MovieCard
+                key={m.movie_id}
+                id={m.movie_id}
+                title={m.title}
+                posterUrl={m.poster_url}
+                releaseYear={m.release_year}
+                genres={m.genres}
+                tmdbRating={m.tmdb_rating}
+                inCatalog={true}
+              />
+            ))
+          ) : (
+            isLoading && <p className="loading-text">Loading top rated movies...</p>
+          )}
+        </div>
+      </section>
+
+      {/* ================= SECTION 3: BROWSE CATALOG (GET /movies) ================= */}
+      <section className="movie-section">
+        <div className="section-heading">
+          <div>
+            <p className="section-label">CATALOG</p>
+            <h2>Browse Movies</h2>
+          </div>
+          <button className="view-all" onClick={() => navigate("/search")}>
+            Full Catalog →
+          </button>
+        </div>
+
+        <div className="movie-grid">
+          {browseMovies.length > 0 ? (
+            browseMovies.slice(0, 10).map((m) => (
+              <MovieCard
+                key={m.movie_id}
+                id={m.movie_id}
+                title={m.title}
+                posterUrl={m.poster_url}
+                releaseYear={m.release_year}
+                genres={m.genres}
+                tmdbRating={m.tmdb_rating}
+                inCatalog={true}
+              />
+            ))
+          ) : (
+            isLoading && <p className="loading-text">Loading catalog movies...</p>
+          )}
+        </div>
+      </section>
+
+      {/* ================= AI RECOMMENDATIONS CTA ================= */}
+      <section className="movie-section">
+        <div className="section-heading">
+          <div>
+            <p className="section-label">AI PICKS FOR YOU</p>
+            <h2>Recommended For You</h2>
+          </div>
+        </div>
 
         <div className="recommendation-box">
-
-          <div className="ai-icon">
-            ✦
-          </div>
-
+          <div className="ai-icon">✦</div>
           <div>
-
-            <h3>
-              AI-Powered Recommendations
-            </h3>
-
+            <h3>AI-Powered Recommendations</h3>
             <p>
-              Our AI learns your taste and finds movies
-              that match your interests.
+              Our machine learning recommender learns your taste as you rate movies and suggests titles tailored to you.
             </p>
-
           </div>
-
-
-          <Link
-            to="/recommendations"
-            className="recommendation-button"
-          >
+          <Link to="/recommendations" className="recommendation-button">
             Explore Recommendations
           </Link>
-
         </div>
-
       </section>
-
     </div>
   );
 }

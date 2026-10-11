@@ -153,3 +153,14 @@
   margin-top: 28px;
   font-size: 14px;
 }
+
+.auth-error {
+  background: rgba(229, 9, 90, 0.12);
+  border: 1px solid #e5095a;
+  color: #ff6b9d;
+  padding: 12px;
+  border-radius: 7px;
+  font-size: 13px;
+  margin-bottom: 18px;
+  line-height: 1.5;
+}

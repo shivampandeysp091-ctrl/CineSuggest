@@ -1,0 +1,496 @@
+/* ==========================================================
+   CineSuggest — Responsive overrides (tablet + phone)
+   Imported LAST in main.jsx so it wins over per-page CSS.
+   Vite bundles all page CSS globally, so older per-page rules
+   (e.g. `.nav-links { display: none }`) are overridden here.
+   ========================================================== */
+
+/* ---------- Safety nets (all sizes) ---------- */
+
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+img,
+video {
+  max-width: 100%;
+}
+
+/* ==========================================================
+   TABLET  (<= 1000px)
+   Fluid grids instead of fixed 210px columns
+   ========================================================== */
+@media (max-width: 1000px) {
+  .movie-grid,
+  .search-grid,
+  .my-list-grid,
+  .history-grid,
+  .recommendation-grid,
+  .similar-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+/* ==========================================================
+   PHONE  (<= 768px)
+   ========================================================== */
+@media (max-width: 768px) {
+  /* ---------- Top bar: logo + avatar only ---------- */
+  .navbar {
+    height: 60px !important;
+    min-height: 60px !important;
+    padding: 0 16px !important;
+    padding-top: env(safe-area-inset-top, 0px) !important;
+    flex-wrap: nowrap !important;
+    gap: 12px !important;
+  }
+
+  .logo {
+    min-width: 0 !important;
+    font-size: 18px !important;
+    white-space: nowrap;
+  }
+
+  .profile-circle {
+    flex-shrink: 0;
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  /* ---------- Navigation becomes a bottom tab bar ---------- */
+  .nav-links {
+    position: fixed !important;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+
+    display: flex !important;
+    justify-content: space-around !important;
+    align-items: stretch;
+    gap: 0 !important;
+    order: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 0 env(safe-area-inset-bottom, 0px) !important;
+    overflow: visible !important;
+
+    background: rgba(12, 12, 16, 0.97);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid #222;
+  }
+
+  .nav-links a {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 4px;
+    text-align: center;
+    line-height: 1.2;
+    font-size: 11.5px !important;
+    white-space: normal !important;
+  }
+
+  .nav-links a.active {
+    color: #e5095a;
+    box-shadow: inset 0 2px 0 #e5095a;
+  }
+
+  /* Keep content clear of the fixed bottom bar
+     (only on pages that actually have the nav) */
+  #root:has(.nav-links) {
+    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* ---------- Fluid movie cards ---------- */
+  .movie-grid,
+  .search-grid,
+  .my-list-grid,
+  .history-grid,
+  .recommendation-grid,
+  .similar-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 22px 14px !important;
+  }
+
+  .movie-card,
+  .search-card,
+  .my-list-card,
+  .history-card,
+  .recommendation-card,
+  .similar-card {
+    width: 100% !important;
+    min-width: 0;
+  }
+
+  .movie-poster,
+  .search-poster,
+  .my-list-poster,
+  .history-poster,
+  .recommendation-poster,
+  .similar-poster {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 2 / 3;
+  }
+
+  /* Hover lift feels janky on touch */
+  .movie-card:hover,
+  .search-card:hover,
+  .my-list-card:hover,
+  .history-card:hover,
+  .recommendation-card:hover,
+  .similar-card:hover {
+    transform: none;
+  }
+
+  .movie-card h3,
+  .search-card h3,
+  .my-list-card h3,
+  .history-card h3,
+  .recommendation-card h3,
+  .similar-card h3 {
+    font-size: 15px !important;
+    overflow-wrap: anywhere;
+  }
+
+  .movie-card p,
+  .search-card p,
+  .my-list-card p,
+  .history-card p,
+  .recommendation-card p,
+  .similar-card p {
+    font-size: 12.5px !important;
+  }
+
+  /* ---------- Inputs: 16px stops iOS zooming on focus ---------- */
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+  /* ---------- Home ---------- */
+  .welcome-section {
+    min-height: auto !important;
+    padding: 36px 20px !important;
+    background-position: 70% center !important;
+  }
+
+  .welcome-content h1 {
+    font-size: 34px !important;
+  }
+
+  .welcome-text {
+    font-size: 15px !important;
+    margin-bottom: 22px !important;
+  }
+
+  .search-box {
+    width: 100% !important;
+    height: 52px !important;
+    padding-left: 14px !important;
+  }
+
+  .search-box button {
+    padding: 0 18px !important;
+  }
+
+  .movie-section {
+    padding: 28px 20px !important;
+  }
+
+  .section-heading h2 {
+    font-size: 24px !important;
+  }
+
+  .recommendation-box {
+    flex-wrap: wrap;
+    padding: 18px !important;
+    gap: 14px !important;
+  }
+
+  .recommendation-button {
+    margin-left: 0 !important;
+    width: 100%;
+    text-align: center;
+    padding: 13px 20px !important;
+  }
+
+  /* ---------- Search ---------- */
+  .search-header {
+    padding: 32px 20px 28px !important;
+  }
+
+  .search-header h1 {
+    font-size: 30px !important;
+  }
+
+  .search-large {
+    width: 100% !important;
+    height: 52px !important;
+    margin-top: 22px !important;
+    padding: 0 14px !important;
+  }
+
+  .search-results {
+    padding: 28px 20px 40px !important;
+  }
+
+  .results-heading {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .results-heading h2 {
+    font-size: 22px !important;
+  }
+
+  /* ---------- My List (no navbar on this page) ---------- */
+  .my-list-page {
+    padding: 28px 20px !important;
+  }
+
+  .my-list-header h1 {
+    font-size: 30px !important;
+  }
+
+  /* ---------- History ---------- */
+  .history-header {
+    padding: 28px 20px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+  }
+
+  .history-header h1 {
+    font-size: 30px !important;
+  }
+
+  .history-grid {
+    padding: 28px 20px !important;
+  }
+
+  /* ---------- Recommendations ---------- */
+  .recommendations-header {
+    padding: 28px 20px !important;
+  }
+
+  .recommendations-header h1 {
+    font-size: 30px !important;
+  }
+
+  .ai-message {
+    margin: 0 20px 20px !important;
+    padding: 16px !important;
+    align-items: flex-start !important;
+  }
+
+  .preference-box {
+    margin: 0 20px 28px !important;
+  }
+
+  .recommendation-section {
+    padding: 0 20px !important;
+  }
+
+  /* ---------- Movie details ---------- */
+  .movie-content {
+    padding: 28px 20px !important;
+    gap: 24px !important;
+  }
+
+  .movie-info {
+    max-width: 100%;
+  }
+
+  .movie-info h1 {
+    font-size: 30px !important;
+  }
+
+  .movie-meta {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .movie-actions {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .movie-actions > * {
+    flex: 1 1 140px;
+    text-align: center;
+  }
+
+  .cast-list {
+    flex-wrap: wrap;
+  }
+
+  .rating-section {
+    padding: 16px !important;
+  }
+
+  .similar-section {
+    padding: 32px 20px !important;
+  }
+
+  .back-section {
+    padding: 16px 20px 40px !important;
+  }
+
+  /* ---------- Profile ---------- */
+  .profile-container {
+    width: calc(100% - 28px) !important;
+  }
+
+  .settings-container,
+  .password-container {
+    width: calc(100% - 28px) !important;
+    margin: 20px auto !important;
+  }
+
+  /* ---------- Account settings / change password
+       (no navbar, so drop the 75px top offset) ---------- */
+  .account-settings-page,
+  .change-password-page {
+    padding-top: 12px !important;
+  }
+
+  .settings-card,
+  .password-card,
+  .forgot-password-card {
+    padding: 24px 18px !important;
+  }
+
+  .account-info {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  /* ---------- Auth pages: hide hero panel, form full width ---------- */
+  .login-page,
+  .signup-page {
+    flex-direction: column !important;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  .login-visual,
+  .signup-visual {
+    display: none !important;
+  }
+
+  .login-form-section,
+  .signup-form-section {
+    width: 100% !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    padding: 28px 20px 40px !important;
+    align-items: center !important;
+  }
+
+  .login-container,
+  .signup-container {
+    max-width: 440px !important;
+    margin: 0 auto;
+  }
+
+  .login-container h2,
+  .signup-container h2 {
+    font-size: 28px !important;
+  }
+
+  .login-subtitle,
+  .signup-subtitle {
+    margin-bottom: 24px !important;
+  }
+
+  .login-options {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .forgot-password-page {
+    padding: 20px 0;
+  }
+
+  /* ---------- Touch-friendly tap targets ---------- */
+  .remove-button,
+  .remove-history-button {
+    width: 36px !important;
+    height: 36px !important;
+  }
+}
+
+/* ==========================================================
+   SMALL PHONE  (<= 560px) — 2 columns
+   ========================================================== */
+@media (max-width: 560px) {
+  .movie-grid,
+  .search-grid,
+  .my-list-grid,
+  .history-grid,
+  .recommendation-grid,
+  .similar-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 22px 14px !important;
+  }
+
+  .welcome-content h1 {
+    font-size: 30px !important;
+  }
+
+  /* Hide the search icon so the input has room */
+  .search-box > span {
+    display: none;
+  }
+
+  .nav-links a {
+    font-size: 10.5px !important;
+  }
+
+  .movie-poster-large {
+    width: min(210px, 62vw) !important;
+    height: auto !important;
+    aspect-ratio: 2 / 3;
+  }
+}
+
+/* ==========================================================
+   VERY SMALL PHONE  (<= 360px)
+   ========================================================== */
+@media (max-width: 360px) {
+  .logo {
+    font-size: 16px !important;
+  }
+
+  .nav-links a {
+    font-size: 10px !important;
+  }
+
+  .welcome-content h1,
+  .search-header h1,
+  .history-header h1,
+  .recommendations-header h1,
+  .my-list-header h1 {
+    font-size: 26px !important;
+  }
+}
+
+/* Landscape phones: keep the bottom bar slim */
+@media (max-width: 900px) and (max-height: 480px) and (orientation: landscape) {
+  .nav-links a {
+    min-height: 44px;
+  }
+
+  #root:has(.nav-links) {
+    padding-bottom: calc(44px + env(safe-area-inset-bottom, 0px));
+  }
+}

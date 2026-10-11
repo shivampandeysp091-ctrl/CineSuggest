@@ -1,3 +1,10 @@
+# Environment / secrets – NEVER commit
+.env
+.env.*
+backend/.env
+backend/.env.*
+!.env.example
+
 # Logs
 logs
 *.log

@@ -224,12 +224,17 @@
 
 /* ================= MOVIE CARDS ================= */
 
+.loading-text {
+  color: #888;
+  font-size: 14px;
+  padding: 15px 0;
+  grid-column: 1 / -1;
+}
+
 .movie-grid {
   display: grid;
-
-  grid-template-columns: repeat(auto-fit, 210px);
-
-  gap: 35px 25px;
+  grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+  gap: 25px 20px;
 }
 
 .movie-card {

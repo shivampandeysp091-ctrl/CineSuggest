@@ -261,10 +261,8 @@
 
 .recommendation-grid {
   display: grid;
-
-  grid-template-columns: repeat(4, 210px);
-
-  gap: 35px 25px;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 25px 20px;
 }
 
 
@@ -456,15 +454,6 @@
    RESPONSIVE
 ========================= */
 
-@media (max-width: 1000px) {
-
-  .recommendation-grid {
-    grid-template-columns: repeat(3, 210px);
-  }
-
-}
-
-
 @media (max-width: 750px) {
 
   .navbar {
@@ -492,11 +481,12 @@
   }
 
   .recommendation-section {
-    padding: 0 25px;
+    padding: 0 20px;
   }
 
   .recommendation-grid {
-    grid-template-columns: repeat(2, 210px);
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 18px 14px;
   }
 
 }
@@ -540,4 +530,72 @@
 .why-recommended strong {
   color: #e5095a;
   font-weight: 600;
+}
+
+/* =========================
+   ONBOARDING UNPERSONALIZED BANNER
+========================= */
+
+.onboarding-unpersonalized-banner {
+  margin: 0 50px 30px;
+  background: linear-gradient(135deg, rgba(229, 9, 90, 0.12) 0%, rgba(20, 20, 30, 0.95) 100%);
+  border: 1px solid rgba(229, 9, 90, 0.35);
+  border-radius: 14px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  box-shadow: 0 8px 30px rgba(229, 9, 90, 0.12);
+}
+
+.banner-icon {
+  font-size: 2.2rem;
+  flex-shrink: 0;
+}
+
+.banner-content {
+  flex: 1;
+}
+
+.banner-content h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 5px;
+}
+
+.banner-content p {
+  font-size: 0.88rem;
+  color: #c0c0d0;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.banner-onboarding-link {
+  display: inline-flex;
+  align-items: center;
+  background: #e5095a;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 10px 18px;
+  border-radius: 8px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.2s ease, transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.banner-onboarding-link:hover {
+  background: #ff2875;
+  transform: translateY(-2px);
+  color: #fff;
+}
+
+@media (max-width: 768px) {
+  .onboarding-unpersonalized-banner {
+    margin: 0 20px 25px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }

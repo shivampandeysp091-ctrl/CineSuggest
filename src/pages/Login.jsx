@@ -1,33 +1,79 @@
 import "./Login.css";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
+import {
+  loginUser,
+  isValidEmail,
+} from "../auth/auth";
+
 function Login() {
+
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    navigate("/home");
+    setError("");
+
+    // Gmail validation
+    if (!isValidEmail(email)) {
+      setError("Please enter a valid Gmail address.");
+      return;
+    }
+
+    if (!password) {
+      setError("Please enter your password.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const result = await loginUser(
+        email.toLowerCase(),
+        password
+      );
+
+      if (!result.success) {
+        setError(result.message);
+        return;
+      }
+
+      navigate("/home");
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="login-page">
 
-      {/* Left Side - Movie Visual */}
+      {/* LEFT SIDE */}
+
       <div className="login-visual">
 
         <div className="visual-overlay">
-          <h1>Cinematic AI</h1>
+
+          <h1>CineSuggest</h1>
 
           <p>
             Discover movies you'll love,
             powered by AI.
           </p>
+
         </div>
 
       </div>
 
 
-      {/* Right Side - Login Form */}
+      {/* RIGHT SIDE */}
+
       <div className="login-form-section">
 
         <div className="login-container">
@@ -39,13 +85,22 @@ function Login() {
           </p>
 
 
+          {error && (
+            <div className="auth-error">
+              {error}
+            </div>
+          )}
+
+
           <form onSubmit={handleLogin}>
 
             <label>Email</label>
 
             <input
               type="email"
-              placeholder="Enter your email"
+              placeholder="example@gmail.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
 
@@ -55,6 +110,8 @@ function Login() {
             <input
               type="password"
               placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
             />
 
@@ -62,22 +119,25 @@ function Login() {
             <div className="login-options">
 
               <label className="remember">
+
                 <input type="checkbox" />
+
                 Remember me
+
               </label>
 
-              <a href="#">
-                Forgot Password?
-              </a>
-
+            <Link to="/forgot-password">
+  Forgot Password?
+</Link>
             </div>
 
 
             <button
               type="submit"
               className="login-button"
+              disabled={loading}
             >
-              Sign In
+              {loading ? "Signing In..." : "Sign In"}
             </button>
 
           </form>

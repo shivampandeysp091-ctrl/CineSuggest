@@ -1,219 +1,180 @@
 import "./Search.css";
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { getCurrentUser } from "../auth/auth";
+import { api } from "../api/client";
+import MovieCard from "../components/MovieCard";
 
 function Search() {
-  const [query, setQuery] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialQuery = searchParams.get("query") || "";
+  const [query, setQuery] = useState(initialQuery);
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [catalogPopular, setCatalogPopular] = useState([]);
 
-  const movies = [
-    {
-      id: "spiderman",
-      title: "Spider-Man: Brand New Day",
-      image: "/images/spiderman-brand-new-day.jpg",
-      rating: "8.0",
-      info: "2026 • Action / Sci-Fi",
-    },
-    {
-      id: "odyssey",
-      title: "The Odyssey",
-      image: "/images/the-odyssey.jpg",
-      rating: "8.4",
-      info: "2026 • Adventure / Drama",
-    },
-    {
-      id: "demon-slayer",
-      title: "Demon Slayer",
-      image: "/images/demon-slayer.jpg",
-      rating: "8.6",
-      info: "2026 • Anime / Action",
-    },
-    {
-      id: "jujutsu-kaisen",
-      title: "Jujutsu Kaisen",
-      image: "/images/jujutsu-kaisen.jpg",
-      rating: "8.5",
-      info: "2026 • Anime / Action",
-    },
-    {
-      id: "inside-out-2",
-      title: "Inside Out 2",
-      image: "/images/inside-out-2.jpg",
-      rating: "8.1",
-      info: "2024 • Animation / Comedy",
-    },
-    {
-      id: "knives-out",
-      title: "Knives Out",
-      image: "/images/knives-out.jpg",
-      rating: "8.0",
-      info: "2019 • Mystery / Crime",
-    },
-    {
-      id: "how-to-train-your-dragon",
-      title: "How to Train Your Dragon",
-      image: "/images/how-to-train-your-dragon.jpg",
-      rating: "8.1",
-      info: "2025 • Fantasy / Adventure",
-    },
-    {
-      id: "fantastic-four",
-      title: "The Fantastic Four: First Steps",
-      image: "/images/fantastic-four-first-steps.jpg",
-      rating: "7.8",
-      info: "2025 • Superhero / Sci-Fi",
-    },
-  ];
+  // ================= USER =================
+  const user = getCurrentUser();
+  const userName =
+    user?.name ||
+    user?.username ||
+    user?.fullName ||
+    "User";
 
-  const searchText = query.trim().toLowerCase();
+  const userInitial =
+    userName.trim().charAt(0).toUpperCase();
 
-  const filteredMovies = movies.filter((movie) => {
-    return movie.title.toLowerCase().includes(searchText);
-  });
+  // Load initial popular movies from catalog if no query
+  useEffect(() => {
+    let isMounted = true;
+    api.getTopRated(12)
+      .then((data) => {
+        if (isMounted && Array.isArray(data)) {
+          setCatalogPopular(data);
+        }
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
+
+  // ================= SEARCH EFFECT =================
+  useEffect(() => {
+    const urlQuery = (searchParams.get("query") || "").trim();
+    setQuery(urlQuery);
+
+    if (!urlQuery) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    let isMounted = true;
+    setIsSearching(true);
+
+    api.searchMovies(urlQuery)
+      .then((data) => {
+        if (!isMounted) return;
+        const list = Array.isArray(data) ? data : (data?.results || []);
+        setSearchResults(list);
+      })
+      .catch((err) => {
+        console.warn("Search API failed:", err);
+        if (isMounted) setSearchResults([]);
+      })
+      .finally(() => {
+        if (isMounted) setIsSearching(false);
+      });
+
+    return () => { isMounted = false; };
+  }, [searchParams]);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setSearchParams({});
+      return;
+    }
+    setSearchParams({ query: trimmed });
+  };
+
+  const isQueryActive = Boolean(searchParams.get("query")?.trim());
+  const displayList = isQueryActive ? searchResults : catalogPopular;
 
   return (
     <div className="search-page">
-
-      {/* NAVBAR */}
+      {/* ================= NAVBAR ================= */}
       <nav className="navbar">
-
         <div className="logo">
-          <span>🎬</span> Cinematic AI
+          <span>🎬</span> CineSuggest
         </div>
 
         <div className="nav-links">
           <Link to="/home">Discover</Link>
-
-          <Link to="/recommendations">
-            My Recommendations
-          </Link>
-
-          <Link to="/my-list">
-            My List
-          </Link>
-
-          <Link to="/history">
-            History
-          </Link>
+          <Link to="/recommendations">My Recommendations</Link>
+          <Link to="/my-list">My List</Link>
+          <Link to="/history">History</Link>
         </div>
 
-        <div className="profile-circle">
-          A
-        </div>
-
+        <Link to="/profile" className="profile-circle" title={userName}>
+          {userInitial}
+        </Link>
       </nav>
 
-
-      {/* SEARCH HEADER */}
+      {/* ================= HEADER ================= */}
       <section className="search-header">
-
         <p>SEARCH MOVIES</p>
-
         <h1>Find Your Next Movie</h1>
-
         <span>
-          Search for movies by title, genre or your
-          favorite characters.
+          Search our AI catalog and live TMDB database for movies, actors, and genres.
         </span>
 
-        <div className="search-large">
-
+        {/* SEARCH BOX */}
+        <form className="search-large" onSubmit={handleSearch}>
           <span>🔍</span>
-
           <input
             type="text"
-            placeholder="Search for movies..."
+            placeholder="Search for movies, e.g. Inception, Avatar, Dark Knight..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            autoComplete="off"
           />
-
-        </div>
-
+          <button type="submit" className="search-submit-button">
+            Search
+          </button>
+        </form>
       </section>
 
-
-      {/* SEARCH RESULTS */}
+      {/* ================= SEARCH RESULTS ================= */}
       <section className="search-results">
-
         <div className="results-heading">
-
           <h2>
-            {searchText === ""
-              ? "All Movies"
-              : `Search Results for "${query}"`}
+            {isQueryActive
+              ? `Results for "${searchParams.get("query")}"`
+              : "Popular in Catalog"}
           </h2>
-
           <span>
-            {filteredMovies.length}{" "}
-            {filteredMovies.length === 1
-              ? "movie"
-              : "movies"}{" "}
-            found
+            {isSearching
+              ? "Searching..."
+              : `${displayList.length} ${displayList.length === 1 ? "movie" : "movies"} found`}
           </span>
-
         </div>
 
-
-        {/* MOVIES */}
-        {filteredMovies.length > 0 ? (
-
+        {displayList.length > 0 ? (
           <div className="search-grid">
+            {displayList.map((m) => {
+              const inCatalog = m.in_catalog !== false;
+              const targetId = inCatalog ? (m.movie_id || m.id) : `tmdb-${m.tmdb_id}`;
+              const year = m.release_year || (m.release_date ? m.release_date.slice(0, 4) : "");
 
-            {filteredMovies.map((movie) => (
-
-              <Link
-                key={movie.id}
-                to={`/movie-details/${movie.id}`}
-                className="search-card"
-              >
-
-                <div className="search-poster">
-
-                  <img
-                    src={movie.image}
-                    alt={movie.title}
-                  />
-
-                  <span className="search-rating">
-                    ★ {movie.rating}
-                  </span>
-
-                </div>
-
-                <h3>
-                  {movie.title}
-                </h3>
-
-                <p>
-                  {movie.info}
-                </p>
-
-              </Link>
-
-            ))}
-
+              return (
+                <MovieCard
+                  key={m.movie_id || m.tmdb_id || m.id}
+                  id={targetId}
+                  title={m.title}
+                  posterUrl={m.poster_url}
+                  releaseYear={year}
+                  genres={m.genres}
+                  tmdbRating={m.tmdb_rating}
+                  inCatalog={inCatalog}
+                  showCatalogBadge={true}
+                />
+              );
+            })}
           </div>
-
+        ) : isSearching ? (
+          <p className="loading-text">Searching database and TMDB...</p>
         ) : (
-
-          /* NO RESULTS */
           <div className="no-results">
-
             <div>🔍</div>
-
-            <h2>
-              No Movies Found
-            </h2>
-
+            <h2>No Movies Found</h2>
             <p>
-              Try searching with another movie title.
+              We couldn't find any catalog or TMDB matches for "{searchParams.get("query")}".
+              Try a different keyword or movie title.
             </p>
-
           </div>
-
         )}
-
       </section>
-
     </div>
   );
 }

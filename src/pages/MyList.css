@@ -35,15 +35,15 @@
 
 .my-list-grid {
   display: grid;
-  grid-template-columns: repeat(4, 210px);
-  gap: 35px 25px;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 25px 20px;
 }
 
 
 /* ================= MOVIE CARD ================= */
 
 .my-list-card {
-  width: 210px;
+  width: 100%;
   cursor: pointer;
   transition: 0.3s;
   position: relative;
@@ -66,8 +66,9 @@
 /* ================= POSTER ================= */
 
 .my-list-poster {
-  width: 210px;
-  height: 315px;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  height: auto;
   border-radius: 10px;
   overflow: hidden;
   position: relative;
@@ -209,4 +210,228 @@
 
 .browse-button:hover {
   background: #c7074e;
+}
+
+
+/* ================= NAVBAR ================= */
+
+.my-list-page .navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 75px;
+  margin: -50px -50px 40px;
+  padding: 15px 50px;
+  background: #090909;
+  border-bottom: 1px solid #222;
+}
+
+.my-list-page .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  color: white;
+  text-decoration: none;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.my-list-page .nav-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+}
+
+.my-list-page .nav-links a {
+  color: #aaa;
+  text-decoration: none;
+  font-size: 14px;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.my-list-page .nav-links a:hover,
+.my-list-page .nav-links a.active {
+  color: #e5095a;
+}
+
+.my-list-page .profile-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e5095a;
+  color: white;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+/* ================= TABLET ================= */
+
+@media (max-width: 900px) {
+  .my-list-page .navbar {
+    gap: 16px;
+    padding-right: 24px;
+    padding-left: 24px;
+  }
+
+  .my-list-page .nav-links {
+    gap: 16px;
+  }
+
+  .my-list-page {
+    padding: 30px 24px;
+  }
+
+  .my-list-page .navbar {
+    margin: -30px -24px 35px;
+  }
+
+  .my-list-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 28px 18px;
+  }
+
+  .my-list-card,
+  .my-list-poster {
+    width: 100%;
+  }
+
+  .my-list-poster {
+    height: auto;
+    aspect-ratio: 2 / 3;
+  }
+}
+
+/* ================= MOBILE ================= */
+
+@media (max-width: 600px) {
+  .my-list-page {
+    padding: 24px 16px;
+  }
+
+  .my-list-page .navbar {
+    position: sticky;
+    top: 0;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin: -24px -16px 30px;
+    padding: 14px 16px;
+  }
+
+  .my-list-page .logo {
+    font-size: 19px;
+  }
+
+  .my-list-page .profile-circle {
+    width: 36px;
+    height: 36px;
+    margin-left: auto;
+  }
+
+  .my-list-page .nav-links {
+    order: 3;
+    width: 100%;
+    justify-content: flex-start;
+    gap: 22px;
+    overflow-x: auto;
+    padding: 5px 0 8px;
+    scrollbar-width: none;
+  }
+
+  .my-list-page .nav-links::-webkit-scrollbar {
+    display: none;
+  }
+
+  .my-list-page .nav-links a {
+    font-size: 13px;
+  }
+
+  .my-list-header {
+    margin-bottom: 26px;
+  }
+
+  .my-list-header h1 {
+    font-size: 32px;
+  }
+
+  .my-list-header span {
+    font-size: 14px;
+  }
+
+  .my-list-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 26px 14px;
+  }
+
+  .my-list-card {
+    min-width: 0;
+  }
+
+  .my-list-poster {
+    margin-bottom: 10px;
+    border-radius: 8px;
+  }
+
+  .my-list-card h3 {
+    font-size: 15px;
+    overflow-wrap: anywhere;
+  }
+
+  .my-list-card p {
+    font-size: 12px;
+  }
+
+  .my-list-rating {
+    top: 7px;
+    left: 7px;
+    padding: 4px 6px;
+    font-size: 12px;
+  }
+
+  .remove-button {
+    top: 7px;
+    right: 7px;
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+
+  .empty-list {
+    min-height: 350px;
+    padding: 20px 0;
+  }
+
+  .empty-list h2 {
+    font-size: 22px;
+  }
+}
+
+/* ================= SMALL PHONES ================= */
+
+@media (max-width: 360px) {
+  .my-list-page .logo {
+    font-size: 17px;
+  }
+
+  .my-list-page .nav-links {
+    gap: 16px;
+  }
+
+  .my-list-grid {
+    gap: 24px 10px;
+  }
+
+  .my-list-header h1 {
+    font-size: 29px;
+  }
 }

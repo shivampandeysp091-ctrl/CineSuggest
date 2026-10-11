@@ -1,33 +1,96 @@
 import "./Signup.css";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
+import {
+  registerUser,
+  isValidEmail,
+  isStrongPassword,
+} from "../auth/auth";
+
 function Signup() {
+
   const navigate = useNavigate();
 
-  const handleSignup = (e) => {
-  e.preventDefault();
-  navigate("/");
-};
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSignup = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    // Name validation
+    if (name.trim().length < 2) {
+      setError("Please enter your full name.");
+      return;
+    }
+
+    // Gmail validation
+    if (!isValidEmail(email)) {
+      setError("Please use a valid Gmail address.");
+      return;
+    }
+
+    // Password validation
+    if (!isStrongPassword(password)) {
+      setError(
+        "Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number and one special character."
+      );
+      return;
+    }
+
+    // Confirm password
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      // Create account via Backend API
+      const result = await registerUser({
+        name: name.trim(),
+        email: email.toLowerCase(),
+        password: password,
+      });
+
+      if (!result.success) {
+        setError(result.message);
+        return;
+      }
+
+      navigate("/onboarding");
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="signup-page">
 
-      {/* Left Side - Movie Visual */}
       <div className="signup-visual">
 
         <div className="signup-visual-overlay">
-          <h1>Cinematic AI</h1>
+
+          <h1>CineSuggest</h1>
 
           <p>
             Your next favorite movie
             is waiting for you.
           </p>
+
         </div>
 
       </div>
 
 
-      {/* Right Side - Signup Form */}
       <div className="signup-form-section">
 
         <div className="signup-container">
@@ -35,8 +98,15 @@ function Signup() {
           <h2>Create Account</h2>
 
           <p className="signup-subtitle">
-            Join Cinematic AI and discover movies made for you.
+            Join CineSuggest and discover movies made for you.
           </p>
+
+
+          {error && (
+            <div className="auth-error">
+              {error}
+            </div>
+          )}
 
 
           <form onSubmit={handleSignup}>
@@ -46,6 +116,8 @@ function Signup() {
             <input
               type="text"
               placeholder="Enter your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               required
             />
 
@@ -54,18 +126,30 @@ function Signup() {
 
             <input
               type="email"
-              placeholder="Enter your email"
+              placeholder="example@gmail.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
+
+            <small className="password-hint">
+              Use a Gmail address ending with @gmail.com
+            </small>
 
 
             <label>Password</label>
 
             <input
               type="password"
-              placeholder="Create a password"
+              placeholder="Create a strong password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
             />
+
+            <small className="password-hint">
+              8+ characters, uppercase, lowercase, number & special character
+            </small>
 
 
             <label>Confirm Password</label>
@@ -73,6 +157,10 @@ function Signup() {
             <input
               type="password"
               placeholder="Confirm your password"
+              value={confirmPassword}
+              onChange={(e) =>
+                setConfirmPassword(e.target.value)
+              }
               required
             />
 
@@ -80,8 +168,9 @@ function Signup() {
             <button
               type="submit"
               className="signup-button"
+              disabled={loading}
             >
-              Create Account
+              {loading ? "Creating Account..." : "Create Account"}
             </button>
 
           </form>
@@ -91,7 +180,7 @@ function Signup() {
 
             Already have an account?
 
-            <Link to="/">
+            <Link to="/login">
               {" "}Sign In
             </Link>
 

@@ -9,13 +9,15 @@
   width: 55%;
   min-height: 100vh;
   position: relative;
+
   background:
     linear-gradient(
       90deg,
       rgba(9, 9, 9, 0.2),
       rgba(9, 9, 9, 0.85)
     ),
-    url("/images/the-odyssey.jpg");
+    url("../assets/hero.png");
+
   background-size: cover;
   background-position: center;
 }
@@ -113,4 +115,52 @@
   color: #e5095a;
   text-decoration: none;
   font-weight: bold;
+}
+
+.auth-error {
+  background: rgba(229, 9, 90, 0.12);
+  border: 1px solid #e5095a;
+  color: #ff6b9d;
+  padding: 12px;
+  border-radius: 7px;
+  font-size: 13px;
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+.password-hint {
+  color: #777;
+  font-size: 11px;
+  margin-top: -8px;
+  margin-bottom: 14px;
+  display: block;
+}
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 750px) {
+  .signup-page {
+    flex-direction: column;
+  }
+
+  .signup-visual {
+    width: 100%;
+    min-height: 300px;
+  }
+
+  .signup-form-section {
+    width: 100%;
+    padding: 30px 25px;
+  }
+
+  .signup-visual-overlay {
+    left: 30px;
+  }
+
+  .signup-visual-overlay h1 {
+    font-size: 38px;
+  }
 }

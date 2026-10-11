@@ -1,0 +1,5 @@
+- Backend: FastAPI + SQLAlchemy. Database: Supabase Postgres (DATABASE_URL in backend/.env).
+- Secrets kabhi hardcode ya print mat karo. .env + python-dotenv. .env ko .gitignore mein rakho.
+- backend/ml/recommender.py ko mat badlo. Sirf use karo.
+- Har kaam se pehle related files padho, naam assume mat karo.
+- Har change ke baad batao kya badla aur kaise test karun.
