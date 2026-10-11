@@ -22,8 +22,9 @@ import models  # noqa: F401
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Create all tables on startup if they don't exist."""
-    Base.metadata.create_all(bind=engine)
+    """Startup: optionally create tables (set CREATE_TABLES=1), then warm up ML."""
+    if os.getenv("CREATE_TABLES", "0") == "1":
+        Base.metadata.create_all(bind=engine)
     recommender_warmup()   # pre-load ML matrices so first request isn't slow
     yield
 
@@ -36,7 +37,8 @@ app = FastAPI(
 )
 
 
-# Allow React frontend (local and Vercel deployments) to communicate with FastAPI
+# Allow React frontend (local and explicit FRONTEND_URL) to communicate with FastAPI.
+# Vercel.app wildcard is intentionally excluded — set FRONTEND_URL env var instead.
 allowed_origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
@@ -49,7 +51,7 @@ if frontend_url:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$|https://.*\.vercel\.app",
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.pool import NullPool
 
 # Load environment variables from backend/.env
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
@@ -18,10 +19,19 @@ if DATABASE_URL.startswith("postgresql://"):
 elif DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = "postgresql+psycopg2://" + DATABASE_URL[len("postgres://"):]
 
+# Supabase transaction pooler (port 6543) or explicit env flag → NullPool
+# NullPool is required for serverless environments (Vercel) where connections
+# cannot be held open between requests.
+_use_null_pool = (
+    ":6543/" in DATABASE_URL
+    or os.getenv("DB_NULLPOOL", "0") == "1"
+)
+
 engine = create_engine(
     DATABASE_URL,
     echo=False,
-    pool_pre_ping=True,
+    poolclass=NullPool if _use_null_pool else None,
+    **({} if _use_null_pool else {"pool_pre_ping": True}),
 )
 
 SessionLocal = sessionmaker(

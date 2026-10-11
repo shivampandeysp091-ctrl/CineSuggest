@@ -1,0 +1,6 @@
+tests/
+scripts/
+__pycache__/
+.pytest_cache/
+tmdb_failed_movies.txt
+.env
