@@ -1,7 +1,7 @@
 import "./MovieDetails.css";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getCurrentUser } from "../auth/auth";
+import { getCurrentUser, getScopedKey } from "../auth/auth";
 import { api } from "../api/client";
 
 function normalizeId(value) {
@@ -14,6 +14,7 @@ function MovieDetails() {
   const { id } = useParams();
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [importing, setImporting] = useState(false);
   const user = getCurrentUser();
 
   const userName =
@@ -61,6 +62,7 @@ function MovieDetails() {
                 description: tmdbMovie.overview || "Overview coming soon.",
                 cast: ["Information sourced from TMDB"],
                 inCatalog: tmdbMovie.in_catalog === true,
+                source: tmdbMovie.source || (tmdbMovie.in_catalog ? "movielens" : null),
               });
               setLoading(false);
               return;
@@ -88,6 +90,7 @@ function MovieDetails() {
                 description: backendMovie.overview || "Discovered on CineSuggest.",
                 cast: ["Cast information coming soon"],
                 inCatalog: true,
+                source: backendMovie.source || "movielens",
               });
               setLoading(false);
               return;
@@ -113,6 +116,7 @@ function MovieDetails() {
                   description: tmdbFallback.overview || "",
                   cast: ["Sourced from TMDB"],
                   inCatalog: tmdbFallback.in_catalog === true,
+                  source: tmdbFallback.source || null,
                 });
                 setLoading(false);
                 return;
@@ -122,7 +126,8 @@ function MovieDetails() {
         }
 
         // Try reading from saved movies
-        const savedMovies = JSON.parse(localStorage.getItem("myList") || "[]");
+        const savedKey = getScopedKey("myList");
+        const savedMovies = JSON.parse(localStorage.getItem(savedKey) || "[]");
         const found = savedMovies.find((m) => String(m.id) === rawId);
         if (isMounted && found) {
           setMovie({
@@ -163,9 +168,10 @@ function MovieDetails() {
       }).catch(() => {});
     }
 
-    // Save to localStorage watch history
+    // Save to user-scoped watch history
     try {
-      const history = JSON.parse(localStorage.getItem("watchHistory") || "[]");
+      const histKey = getScopedKey("watchHistory");
+      const history = JSON.parse(localStorage.getItem(histKey) || "[]");
       const filtered = history.filter((m) => normalizeId(m.id) !== normalizeId(movie.id));
       filtered.unshift({
         id: movie.id,
@@ -177,21 +183,36 @@ function MovieDetails() {
         year: movie.year,
         tmdbRating: movie.tmdbRating,
       });
-      localStorage.setItem("watchHistory", JSON.stringify(filtered.slice(0, 50)));
+      localStorage.setItem(histKey, JSON.stringify(filtered.slice(0, 50)));
     } catch (e) {}
 
-    // Load rating from localStorage
+    // Load rating from backend and scoped localStorage
     try {
-      const ratings = JSON.parse(localStorage.getItem("movieRatings") || "{}");
-      const savedRating = ratings[movie.id] ?? localStorage.getItem("movie-rating-" + movie.id) ?? 0;
+      const rateKey = getScopedKey("movieRatings");
+      const ratings = JSON.parse(localStorage.getItem(rateKey) || "{}");
+      const savedRating = ratings[movie.id] ?? (movie.numericId ? ratings[movie.numericId] : 0);
       const parsedRating = Number(savedRating);
       const validRating = parsedRating >= 1 && parsedRating <= 5 ? parsedRating : 0;
       setUserRating(validRating);
       setSelectedRating(validRating);
+
+      // Also verify with backend user ratings if we have a numericId
+      if (numId) {
+        api.getRatings().then((res) => {
+          if (Array.isArray(res)) {
+            const foundRating = res.find((r) => r.movie_id === numId);
+            if (foundRating && foundRating.rating) {
+              const rVal = Number(foundRating.rating);
+              setUserRating(rVal);
+              setSelectedRating(rVal);
+            }
+          }
+        }).catch(() => {});
+      }
     } catch (error) {
       console.error("Unable to load rating:", error);
     }
-  }, [movie?.id]);
+  }, [movie?.id, movie?.numericId]);
 
   function toggleMyList() {
     if (!movie) return;
@@ -209,7 +230,8 @@ function MovieDetails() {
     }
 
     try {
-      const storedMovies = JSON.parse(localStorage.getItem("myList") || "[]");
+      const listKey = getScopedKey("myList");
+      const storedMovies = JSON.parse(localStorage.getItem(listKey) || "[]");
       const savedMovies = Array.isArray(storedMovies) ? storedMovies : [];
       const updatedMovies = !nextSavedState
         ? savedMovies.filter((item) => normalizeId(item.id) !== normalizeId(movie.id))
@@ -228,30 +250,53 @@ function MovieDetails() {
               genres: movie.genres,
             },
           ];
-      localStorage.setItem("myList", JSON.stringify(updatedMovies));
+      localStorage.setItem(listKey, JSON.stringify(updatedMovies));
     } catch (error) {
       console.error("Unable to update My List:", error);
     }
   }
 
-  function handleRatingSubmit() {
+  async function handleRatingSubmit() {
     if (!movie || selectedRating < 1 || selectedRating > 5) return;
 
-    if (!movie.inCatalog) {
-      alert("Ye movie abhi AI catalog mein nahi hai. Isse rate nahi kiya ja sakta.");
-      return;
+    let targetMovieId = movie.numericId;
+
+    // If not in catalog, import it from TMDB first!
+    if (!movie.inCatalog && movie.tmdbId) {
+      try {
+        setImporting(true);
+        const importRes = await api.importTmdbMovie(movie.tmdbId);
+        if (importRes && importRes.movie_id) {
+          targetMovieId = importRes.movie_id;
+          setMovie((prev) => ({
+            ...prev,
+            numericId: importRes.movie_id,
+            inCatalog: true,
+            source: "tmdb_import",
+          }));
+        } else {
+          alert("Could not import TMDB movie. Please try again.");
+          return;
+        }
+      } catch (err) {
+        console.error("TMDB import error:", err);
+        alert("Could not import TMDB movie into catalog.");
+        return;
+      } finally {
+        setImporting(false);
+      }
     }
 
-    const numId = movie.numericId;
-    if (numId) {
-      api.rateMovie(numId, selectedRating).catch((err) => console.warn("rateMovie err:", err));
+    if (targetMovieId) {
+      api.rateMovie(targetMovieId, selectedRating).catch((err) => console.warn("rateMovie err:", err));
     }
 
     try {
-      const ratings = JSON.parse(localStorage.getItem("movieRatings") || "{}");
+      const rateKey = getScopedKey("movieRatings");
+      const ratings = JSON.parse(localStorage.getItem(rateKey) || "{}");
       ratings[movie.id] = selectedRating;
-      localStorage.setItem("movieRatings", JSON.stringify(ratings));
-      localStorage.setItem("movie-rating-" + movie.id, String(selectedRating));
+      if (targetMovieId) ratings[targetMovieId] = selectedRating;
+      localStorage.setItem(rateKey, JSON.stringify(ratings));
       setUserRating(selectedRating);
     } catch (error) {
       console.error("Unable to save rating:", error);
@@ -328,11 +373,15 @@ function MovieDetails() {
               <div className="movie-info">
                 <div className="movie-meta-header">
                   <p className="movie-label">MOVIE DETAILS</p>
-                  {!movie.inCatalog && (
-                    <span className="tmdb-only-badge" title="Ye movie abhi AI catalog mein nahi hai">
-                      TMDB Only (View Only)
+                  {!movie.inCatalog ? (
+                    <span className="tmdb-only-badge" title="This movie can be imported by rating it">
+                      TMDB Movie (Rate to Import)
                     </span>
-                  )}
+                  ) : movie.source === "tmdb_import" ? (
+                    <span className="tmdb-only-badge" style={{ borderColor: "#10b981", color: "#34d399", background: "rgba(16, 185, 129, 0.1)" }} title="Imported by community">
+                      Community Catalog
+                    </span>
+                  ) : null}
                 </div>
 
                 <h1>{movie.title}</h1>
@@ -354,25 +403,38 @@ function MovieDetails() {
                     </span>
                   )}
 
-                  {movie.genres?.length > 0 && (
-                    <span>{movie.genres.join(" • ")}</span>
-                  )}
+                  {(() => {
+                    const rawList = Array.isArray(movie.genres)
+                      ? movie.genres
+                      : (typeof movie.genres === "string" ? movie.genres.split("|") : []);
+                    const cleaned = rawList
+                      .map((g) => (typeof g === "string" ? g.trim() : ""))
+                      .filter((g) => Boolean(g) && g !== "(no genres listed)" && g.toUpperCase() !== "IMAX");
+                    return cleaned.length > 0 ? <span>{cleaned.join(" • ")}</span> : null;
+                  })()}
                 </div>
 
                 <p className="movie-description">
                   {movie.description}
                 </p>
 
-                {/* 4) TMDB-only movie banner if not in AI catalog */}
-                {!movie.inCatalog && (
+                {/* 4) TMDB movie banner */}
+                {!movie.inCatalog ? (
                   <div className="catalog-notice-box">
                     <span>ℹ️</span>
                     <p>
-                      <strong>TMDB-Only Movie:</strong> Ye movie abhi CineSuggest ke AI catalog mein nahi hai.
-                      Aap iske details dekh sakte hain, par ratings aur AI recommendations ke liye ye movie abhi uplabdh nahi hai.
+                      <strong>TMDB Movie:</strong> This title is not yet in our internal catalog.
+                      Rate it below to add it to the catalog! Note: Collaborative AI predictions for this title will become active as more users rate it.
                     </p>
                   </div>
-                )}
+                ) : movie.source === "tmdb_import" ? (
+                  <div className="catalog-notice-box" style={{ borderColor: "rgba(16, 185, 129, 0.3)" }}>
+                    <span>✨</span>
+                    <p>
+                      <strong>Community Catalog:</strong> This movie was imported from TMDB. Your rating helps train future AI recommendations for this title.
+                    </p>
+                  </div>
+                ) : null}
 
                 <div className="movie-actions">
                   <button
@@ -395,12 +457,14 @@ function MovieDetails() {
                   </div>
                 )}
 
-                {/* 4) RATING SECTION: Hide/disable if in_catalog is false */}
-                <div className={`rating-section ${!movie.inCatalog ? "rating-disabled" : ""}`}>
+                {/* 4) RATING SECTION: Enabled for both catalog and TMDB movies */}
+                <div className="rating-section">
                   <div className="rating-left">
                     <p className="rating-label">YOUR RATING</p>
                     <p className="rating-question">
-                      {movie.inCatalog ? "Rate this movie (1 to 5 stars)" : "AI Catalog Rating (Disabled)"}
+                      {movie.inCatalog
+                        ? "Rate this movie (1 to 5 stars)"
+                        : "Rate to add this TMDB movie to catalog"}
                     </p>
 
                     <div className="rating-stars">
@@ -409,18 +473,10 @@ function MovieDetails() {
                           key={star}
                           type="button"
                           className={star <= selectedRating ? "star active" : "star"}
-                          onClick={() => {
-                            if (movie.inCatalog) {
-                              setSelectedRating(star);
-                            }
-                          }}
-                          disabled={!movie.inCatalog}
+                          onClick={() => setSelectedRating(star)}
+                          disabled={importing}
                           aria-label={`Rate ${star} out of 5`}
-                          title={
-                            movie.inCatalog
-                              ? `Rate ${star} out of 5`
-                              : "Ye movie abhi AI catalog mein nahi hai"
-                          }
+                          title={`Rate ${star} out of 5 stars`}
                         >
                           ★
                         </button>
@@ -438,18 +494,19 @@ function MovieDetails() {
                     </p>
                   </div>
 
-                  {/* 4) Rate button with Tooltip when in_catalog is false */}
-                  <div
-                    className="rate-button-container"
-                    title={!movie.inCatalog ? "Ye movie abhi AI catalog mein nahi hai" : ""}
-                  >
+                  {/* 4) Rate button with import indicator */}
+                  <div className="rate-button-container">
                     <button
                       type="button"
                       className="submit-rating"
                       onClick={handleRatingSubmit}
-                      disabled={!movie.inCatalog || selectedRating === 0}
+                      disabled={selectedRating === 0 || importing}
                     >
-                      {movie.inCatalog ? "Rate Movie" : "Catalog Only"}
+                      {importing
+                        ? "Importing..."
+                        : movie.inCatalog
+                        ? "Rate Movie"
+                        : "Import & Rate"}
                     </button>
                   </div>
                 </div>

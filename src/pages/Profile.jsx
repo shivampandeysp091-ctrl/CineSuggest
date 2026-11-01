@@ -1,10 +1,13 @@
 import "./Profile.css";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import {
   getCurrentUser,
+  getScopedKey,
   logoutUser,
 } from "../auth/auth";
+import { api } from "../api/client";
 
 function Profile() {
   const navigate = useNavigate();
@@ -12,13 +15,53 @@ function Profile() {
   // Get currently logged-in user
   const user = getCurrentUser();
 
-  // Get saved movies
-  const savedMovies =
-    JSON.parse(localStorage.getItem("myList")) || [];
+  const [ratedCount, setRatedCount] = useState(0);
+  const [watchedCount, setWatchedCount] = useState(0);
+  const [savedCount, setSavedCount] = useState(0);
 
-  // Get watch history
-  const watchHistory =
-    JSON.parse(localStorage.getItem("watchHistory")) || [];
+  useEffect(() => {
+    let isMounted = true;
+
+    // Load initial values from scoped local storage
+    try {
+      const saved = JSON.parse(localStorage.getItem(getScopedKey("myList")) || "[]");
+      const watched = JSON.parse(localStorage.getItem(getScopedKey("watchHistory")) || "[]");
+      const rated = JSON.parse(localStorage.getItem(getScopedKey("movieRatings")) || "{}");
+      if (isMounted) {
+        setSavedCount(Array.isArray(saved) ? saved.length : 0);
+        setWatchedCount(Array.isArray(watched) ? watched.length : 0);
+        setRatedCount(Object.keys(rated).length);
+      }
+    } catch (_) {}
+
+    // Fetch authoritative stats from backend
+    async function loadStats() {
+      try {
+        const [ratingsRes, historyRes, favoritesRes] = await Promise.allSettled([
+          api.getRatings(),
+          api.getWatchHistory(),
+          api.getFavorites(),
+        ]);
+
+        if (isMounted) {
+          if (ratingsRes.status === "fulfilled" && Array.isArray(ratingsRes.value)) {
+            setRatedCount(ratingsRes.value.length);
+          }
+          if (historyRes.status === "fulfilled" && Array.isArray(historyRes.value?.watch_history)) {
+            setWatchedCount(historyRes.value.watch_history.length);
+          }
+          if (favoritesRes.status === "fulfilled" && Array.isArray(favoritesRes.value?.favorites)) {
+            setSavedCount(favoritesRes.value.favorites.length);
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to load user stats from backend:", err);
+      }
+    }
+
+    loadStats();
+    return () => { isMounted = false; };
+  }, []);
 
   // Logout
   const handleLogout = () => {
@@ -143,7 +186,7 @@ function Profile() {
             </span>
 
             <strong>
-              0
+              {ratedCount}
             </strong>
 
             <small>
@@ -165,7 +208,7 @@ function Profile() {
             </span>
 
             <strong>
-              {watchHistory.length}
+              {watchedCount}
             </strong>
 
             <small>
@@ -187,7 +230,7 @@ function Profile() {
             </span>
 
             <strong>
-              {savedMovies.length}
+              {savedCount}
             </strong>
 
             <small>

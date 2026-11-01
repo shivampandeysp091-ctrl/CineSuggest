@@ -2,7 +2,7 @@ import "./History.css";
 import "../components/MovieCard.css";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getCurrentUser } from "../auth/auth";
+import { getCurrentUser, getScopedKey } from "../auth/auth";
 import { api } from "../api/client";
 
 function History() {
@@ -32,28 +32,37 @@ function History() {
     async function loadHistory() {
       try {
         const data = await api.getWatchHistory();
-        const formatted = data.watch_history.map((h) => {
-          const genresArr = (h.genres || "").split("|").filter(Boolean);
-          const genresStr = genresArr.slice(0, 2).join(" • ");
-          return {
-            id: h.movie_id,
-            numericId: h.movie_id,
-            title: h.title,
-            image: h.poster_url || null,
-            poster: h.poster_url || null,
-            genres: genresArr,
-            info: h.release_year ? `${h.release_year}${genresStr ? ` • ${genresStr}` : ""}` : genresStr,
-            rating: "Watched",
-            watchedAt: h.watched_at ? new Date(h.watched_at).toLocaleDateString() : "",
-          };
-        });
-        if (isMounted) setMovies(formatted);
-        return;
+        if (isMounted && data && Array.isArray(data.watch_history)) {
+          const formatted = data.watch_history.map((h) => {
+            const genresArr = (h.genres || "").split("|").filter(Boolean);
+            const genresStr = genresArr.slice(0, 2).join(" • ");
+            return {
+              id: h.movie_id,
+              numericId: h.movie_id,
+              title: h.title,
+              image: h.poster_url || null,
+              poster: h.poster_url || null,
+              genres: genresArr,
+              info: h.release_year ? `${h.release_year}${genresStr ? ` • ${genresStr}` : ""}` : genresStr,
+              rating: "Watched",
+              watchedAt: h.watched_at ? new Date(h.watched_at).toLocaleDateString() : "",
+            };
+          });
+          setMovies(formatted);
+          try {
+            localStorage.setItem(getScopedKey("watchHistory"), JSON.stringify(formatted));
+          } catch (_) {}
+          return;
+        }
       } catch (e) {
-        console.warn("Unable to load watch history from API, using local storage:", e);
+        console.warn("Unable to load watch history from API, using scoped local storage:", e);
       }
-      const savedHistory = JSON.parse(localStorage.getItem("watchHistory") || "[]");
-      if (isMounted) setMovies(savedHistory);
+      try {
+        const savedHistory = JSON.parse(localStorage.getItem(getScopedKey("watchHistory")) || "[]");
+        if (isMounted) setMovies(Array.isArray(savedHistory) ? savedHistory : []);
+      } catch (_) {
+        if (isMounted) setMovies([]);
+      }
     }
     loadHistory();
     return () => { isMounted = false; };
@@ -73,10 +82,12 @@ function History() {
       (movie) => movie.id !== id
     );
 
-    localStorage.setItem(
-      "watchHistory",
-      JSON.stringify(updatedHistory)
-    );
+    try {
+      localStorage.setItem(
+        getScopedKey("watchHistory"),
+        JSON.stringify(updatedHistory)
+      );
+    } catch (_) {}
 
     setMovies(updatedHistory);
   };
@@ -92,7 +103,9 @@ function History() {
         api.removeWatchHistory(numId).catch(() => {});
       }
     });
-    localStorage.removeItem("watchHistory");
+    try {
+      localStorage.removeItem(getScopedKey("watchHistory"));
+    } catch (_) {}
     setMovies([]);
   };
 

@@ -2,7 +2,7 @@ import "./Onboarding.css";
 import "../components/MovieCard.css";
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { getCurrentUser } from "../auth/auth";
+import { getCurrentUser, getScopedKey } from "../auth/auth";
 import { api } from "../api/client";
 
 const TARGET_COUNT = 8;
@@ -27,11 +27,30 @@ function Onboarding() {
   useEffect(() => {
     let isMounted = true;
 
-    // Load any ratings already in localStorage
+    // Load any ratings from scoped localStorage
     try {
-      const storedRatings = JSON.parse(localStorage.getItem("movieRatings") || "{}");
+      const storedRatings = JSON.parse(
+        localStorage.getItem(getScopedKey("movieRatings")) || "{}"
+      );
       setRatings(storedRatings);
     } catch (e) {}
+
+    // Hydrate ratings from backend API
+    api.getRatings().then((res) => {
+      if (isMounted && Array.isArray(res)) {
+        const ratingMap = {};
+        res.forEach((r) => {
+          if (r.movie_id && r.rating) ratingMap[r.movie_id] = r.rating;
+        });
+        setRatings((prev) => ({ ...prev, ...ratingMap }));
+        try {
+          localStorage.setItem(
+            getScopedKey("movieRatings"),
+            JSON.stringify({ ...ratings, ...ratingMap })
+          );
+        } catch (_) {}
+      }
+    }).catch(() => {});
 
     async function loadOnboarding() {
       setLoading(true);
@@ -80,8 +99,7 @@ function Onboarding() {
     const updated = { ...ratings, [movieId]: starValue };
     setRatings(updated);
     try {
-      localStorage.setItem("movieRatings", JSON.stringify(updated));
-      localStorage.setItem("movie-rating-" + movieId, String(starValue));
+      localStorage.setItem(getScopedKey("movieRatings"), JSON.stringify(updated));
     } catch (e) {}
 
     // Call backend POST /ratings/

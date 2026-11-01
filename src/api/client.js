@@ -21,31 +21,30 @@ async function request(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
   const token = getToken();
 
-  const headers = {
-    ...options.headers,
-  };
+  const headers = { ...options.headers };
 
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
   // Handle JSON body
-  if (options.body && typeof options.body === "object" && !(options.body instanceof FormData)) {
+  if (
+    options.body &&
+    typeof options.body === "object" &&
+    !(options.body instanceof FormData)
+  ) {
     headers["Content-Type"] = "application/json";
     options.body = JSON.stringify(options.body);
   }
 
   try {
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
-
+    const response = await fetch(url, { ...options, headers });
     const isJson = response.headers.get("content-type")?.includes("application/json");
     const data = isJson ? await response.json() : await response.text();
 
     if (!response.ok) {
-      const errorMsg = data?.detail || data?.message || `HTTP ${response.status}: Request failed`;
+      const errorMsg =
+        data?.detail || data?.message || `HTTP ${response.status}: Request failed`;
       const err = new Error(errorMsg);
       err.status = response.status;
       err.data = data;
@@ -62,17 +61,19 @@ async function request(endpoint, options = {}) {
 export const api = {
   // ── Authentication ──────────────────────────────────────────────────────────
   async login(email, password) {
-    return request("/auth/login", {
-      method: "POST",
-      body: { email, password },
-    });
+    return request("/auth/login", { method: "POST", body: { email, password } });
   },
 
   async register(username, email, password) {
-    return request("/auth/register", {
-      method: "POST",
-      body: { username, email, password },
-    });
+    return request("/auth/register", { method: "POST", body: { username, email, password } });
+  },
+
+  async verifyOtp(email, otp) {
+    return request("/auth/verify-otp", { method: "POST", body: { email, otp } });
+  },
+
+  async resendOtp(email) {
+    return request("/auth/resend-otp", { method: "POST", body: { email } });
   },
 
   // ── Movies ──────────────────────────────────────────────────────────────────
@@ -116,6 +117,14 @@ export const api = {
     return request(`/movies/onboarding?n=${n}`);
   },
 
+  /**
+   * Import a TMDB-only movie into the internal catalog so it can be rated.
+   * Returns { movie_id, in_catalog: true, cf_eligible: false, message }.
+   */
+  async importTmdbMovie(tmdbId) {
+    return request(`/movies/import-tmdb/${tmdbId}`, { method: "POST" });
+  },
+
   // ── Recommendations ─────────────────────────────────────────────────────────
   async getRecommendations(n = 10) {
     return request(`/recommendations/me?n=${n}`);
@@ -134,9 +143,7 @@ export const api = {
   },
 
   async removeFavorite(movieId) {
-    return request(`/favorites/${movieId}`, {
-      method: "DELETE",
-    });
+    return request(`/favorites/${movieId}`, { method: "DELETE" });
   },
 
   async checkFavorite(movieId) {
@@ -156,9 +163,7 @@ export const api = {
   },
 
   async removeWatchHistory(movieId) {
-    return request(`/watch-history/${movieId}`, {
-      method: "DELETE",
-    });
+    return request(`/watch-history/${movieId}`, { method: "DELETE" });
   },
 
   // ── Ratings ─────────────────────────────────────────────────────────────────
@@ -174,9 +179,7 @@ export const api = {
   },
 
   async deleteRating(movieId) {
-    return request(`/ratings/${movieId}`, {
-      method: "DELETE",
-    });
+    return request(`/ratings/${movieId}`, { method: "DELETE" });
   },
 };
 

@@ -137,6 +137,67 @@
 }
 
 
+.auth-success {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid #10b981;
+  color: #34d399;
+  padding: 12px;
+  border-radius: 7px;
+  font-size: 13px;
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+.otp-input {
+  font-family: 'Courier New', monospace;
+  font-size: 26px !important;
+  letter-spacing: 10px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.otp-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.resend-button {
+  background: transparent;
+  border: 1px solid #444;
+  color: #bbb;
+  height: 42px;
+  border-radius: 7px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.resend-button:not(:disabled):hover {
+  border-color: #e5095a;
+  color: white;
+}
+
+.resend-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.back-to-signup {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 13px;
+  cursor: pointer;
+  margin-top: 8px;
+  text-decoration: underline;
+}
+
+.back-to-signup:hover {
+  color: #ddd;
+}
+
 /* =========================
    MOBILE
 ========================= */

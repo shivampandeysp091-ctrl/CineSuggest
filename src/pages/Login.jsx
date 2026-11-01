@@ -20,9 +20,9 @@ function Login() {
     e.preventDefault();
     setError("");
 
-    // Gmail validation
+    // Email validation
     if (!isValidEmail(email)) {
-      setError("Please enter a valid Gmail address.");
+      setError("Please enter a valid email address.");
       return;
     }
 
@@ -33,12 +33,21 @@ function Login() {
 
     try {
       setLoading(true);
-      const result = await loginUser(
-        email.toLowerCase(),
-        password
-      );
+      const cleanEmail = email.toLowerCase().trim();
+      const result = await loginUser(cleanEmail, password);
 
       if (!result.success) {
+        if (result.needs_verification) {
+          // Redirect to Signup OTP verification screen with email pre-filled
+          navigate("/signup", {
+            state: {
+              email: cleanEmail,
+              step: "verify",
+              message: "Please enter your verification code to activate your account.",
+            },
+          });
+          return;
+        }
         setError(result.message);
         return;
       }
@@ -98,7 +107,7 @@ function Login() {
 
             <input
               type="email"
-              placeholder="example@gmail.com"
+              placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required

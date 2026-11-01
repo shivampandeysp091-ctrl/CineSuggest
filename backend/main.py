@@ -12,6 +12,7 @@ from routes.ratings import router as ratings_router
 from routes.favorites import router as favorites_router
 from routes.watch_history import router as watch_history_router
 from routes.recommendations import router as recommendations_router
+from routes.verify import router as verify_router
 
 
 import os
@@ -87,3 +88,4 @@ app.include_router(ratings_router)
 app.include_router(favorites_router)
 app.include_router(watch_history_router)
 app.include_router(recommendations_router)
+app.include_router(verify_router)

@@ -1,7 +1,7 @@
 import "./Recommendations.css";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getCurrentUser } from "../auth/auth";
+import { getCurrentUser, getScopedKey } from "../auth/auth";
 import { api } from "../api/client";
 import MovieCard from "../components/MovieCard";
 
@@ -30,12 +30,20 @@ function Recommendations() {
     async function loadData() {
       setLoading(true);
       try {
-        // 1. Calculate how many ratings the user has
+        // 1. Calculate how many ratings the user has from backend API
         let totalRatings = 0;
         try {
-          const localRatings = JSON.parse(localStorage.getItem("movieRatings") || "{}");
-          totalRatings = Object.keys(localRatings).length;
-        } catch (e) {}
+          const userRatings = await api.getRatings();
+          if (Array.isArray(userRatings)) {
+            totalRatings = userRatings.length;
+          }
+        } catch (e) {
+          try {
+            const scopedKey = getScopedKey("movieRatings");
+            const localRatings = JSON.parse(localStorage.getItem(scopedKey) || "{}");
+            totalRatings = Object.keys(localRatings).length;
+          } catch (_) {}
+        }
 
         if (isMounted) setRatingsCount(totalRatings);
 
@@ -47,9 +55,13 @@ function Recommendations() {
           setIsPersonalized(personalizedFlag);
 
           const formatted = recRes.recommendations.map((r) => {
-            const genreList = typeof r.genres === "string"
-              ? r.genres.split("|").map((g) => g.trim()).filter(Boolean)
+            const rawGenres = typeof r.genres === "string"
+              ? r.genres.split("|").map((g) => g.trim())
               : (Array.isArray(r.genres) ? r.genres : []);
+            // Filter out empty strings, "(no genres listed)", and "IMAX" (format tag from MovieLens)
+            const genreList = rawGenres.filter(
+              (g) => Boolean(g) && g.toUpperCase() !== "IMAX" && g !== "(no genres listed)"
+            );
 
             return {
               id: r.movie_id,
@@ -59,12 +71,13 @@ function Recommendations() {
               releaseYear: r.release_year,
               genres: genreList,
               tmdbRating: r.tmdb_rating,
-              matchPercentage: r.match_percentage ? Math.round(r.match_percentage) : (personalizedFlag ? 88 : null),
+              // Only display honest predicted match percentage from model; no hardcoded 88 fallback
+              matchPercentage: r.match_percentage != null ? Math.round(r.match_percentage) : null,
               matchingGenres: genreList.slice(0, 2),
             };
           });
 
-          // Extract top genres from recommendations
+          // Extract top genres from recommendations (excluding IMAX and placeholder tags)
           const genresFrequency = {};
           formatted.forEach((m) => {
             m.genres.forEach((g) => {
@@ -87,15 +100,23 @@ function Recommendations() {
           try {
             const fallback = await api.getTopRated(8);
             if (isMounted && Array.isArray(fallback)) {
-              setRecommendations(fallback.map((f) => ({
-                id: f.movie_id,
-                title: f.title,
-                posterUrl: f.poster_url,
-                releaseYear: f.release_year,
-                genres: f.genres,
-                tmdbRating: f.tmdb_rating,
-                matchPercentage: null,
-              })));
+              setRecommendations(fallback.map((f) => {
+                const rawGenres = typeof f.genres === "string"
+                  ? f.genres.split("|").map((g) => g.trim())
+                  : (Array.isArray(f.genres) ? f.genres : []);
+                const genreList = rawGenres.filter(
+                  (g) => Boolean(g) && g.toUpperCase() !== "IMAX" && g !== "(no genres listed)"
+                );
+                return {
+                  id: f.movie_id,
+                  title: f.title,
+                  posterUrl: f.poster_url,
+                  releaseYear: f.release_year,
+                  genres: genreList,
+                  tmdbRating: f.tmdb_rating,
+                  matchPercentage: null,
+                };
+              }));
             }
           } catch (e2) {}
         }
@@ -146,9 +167,9 @@ function Recommendations() {
         <div className="onboarding-unpersonalized-banner">
           <div className="banner-icon">🎯</div>
           <div className="banner-content">
-            <h4>Pehle kuch movies rate karo, tab AI personalize karega</h4>
+            <h4>Rate a few movies first to personalize your AI recommendations</h4>
             <p>
-              Abhi aapko popular movies dikhai ja rahi hain. Hamara collaborative AI model tab activate hota hai jab aap movies ko star rating dete hain.
+              Currently showing popular movies. Our collaborative AI model activates as soon as you give star ratings to movies.
             </p>
           </div>
           <Link to="/onboarding" className="banner-onboarding-link">

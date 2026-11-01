@@ -364,8 +364,117 @@ def get_onboarding_movies(
     return results
 
 
+
 # ============================================================
-# 9. GET MOVIE BY DATABASE MOVIE_ID
+# 10. IMPORT TMDB MOVIE INTO CATALOG
+# ============================================================
+
+TMDB_IMPORT_ID_FLOOR = 1_000_000   # Safe offset above all MovieLens IDs
+
+@router.post("/import-tmdb/{tmdb_id}")
+def import_tmdb_movie(
+    tmdb_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    Import a TMDB movie into the internal movies catalog so users can rate it.
+
+    - Assigns a unique internal movie_id >= 1,000,000.
+    - Sets source='tmdb_import' so the CF model is never invoked for it.
+    - Idempotent: returns the existing record if already imported.
+    - The movie will NOT appear in collaborative-filtering recommendations
+      until it accumulates sufficient user ratings and is retrained.
+    """
+    # Already in catalog?
+    existing = db.query(Movie).filter(Movie.tmdb_id == tmdb_id).first()
+    if existing:
+        return {
+            "movie_id":        existing.movie_id,
+            "tmdb_id":         existing.tmdb_id,
+            "title":           existing.title,
+            "in_catalog":      True,
+            "source":          existing.source,
+            "cf_eligible":     existing.source == "movielens",
+            "message":         "Movie already in catalog",
+        }
+
+    # Fetch from TMDB
+    try:
+        resp = tmdb_session.get(f"{TMDB_BASE_URL}/movie/{tmdb_id}", timeout=10)
+        if resp.status_code == 404:
+            raise HTTPException(status_code=404, detail="Movie not found on TMDB.")
+        if not resp.ok:
+            raise HTTPException(status_code=resp.status_code, detail="TMDB request failed.")
+        data = resp.json()
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("TMDB fetch error during import: %s", exc)
+        raise HTTPException(status_code=500, detail="Unable to connect to TMDB.")
+
+    # Parse metadata
+    release_date = data.get("release_date", "")
+    release_year = None
+    if release_date and len(release_date) >= 4:
+        try:
+            release_year = int(release_date[:4])
+        except (ValueError, TypeError):
+            pass
+
+    genres_str   = " | ".join(g["name"] for g in data.get("genres", []))
+    poster_url   = f"{POSTER_BASE_URL}{data['poster_path']}"   if data.get("poster_path")   else None
+    backdrop_url = f"{BACKDROP_BASE_URL}{data['backdrop_path']}" if data.get("backdrop_path") else None
+    vote_avg     = data.get("vote_average")
+
+    # Assign safe unique movie_id
+    from sqlalchemy import text as _text
+    max_import_id = db.execute(
+        _text(
+            "SELECT COALESCE(MAX(movie_id), :floor - 1) "
+            "FROM movies WHERE movie_id >= :floor"
+        ),
+        {"floor": TMDB_IMPORT_ID_FLOOR},
+    ).scalar()
+    new_movie_id = max(TMDB_IMPORT_ID_FLOOR, int(max_import_id) + 1)
+
+    title = data.get("title") or data.get("original_title") or "Unknown Title"
+
+    new_movie = Movie(
+        movie_id     = new_movie_id,
+        title        = title,
+        genres       = genres_str or None,
+        release_year = release_year,
+        tmdb_id      = tmdb_id,
+        poster_url   = poster_url,
+        backdrop_url = backdrop_url,
+        overview     = data.get("overview") or None,
+        runtime      = data.get("runtime") or None,
+        tmdb_rating  = round(float(vote_avg), 1) if vote_avg is not None else None,
+        source       = "tmdb_import",
+    )
+    db.add(new_movie)
+    db.commit()
+    db.refresh(new_movie)
+
+    logger.info("Imported TMDB movie %s as internal id %s", tmdb_id, new_movie_id)
+
+    return {
+        "movie_id":    new_movie_id,
+        "tmdb_id":     tmdb_id,
+        "title":       title,
+        "in_catalog":  True,
+        "source":      "tmdb_import",
+        "cf_eligible": False,
+        "message": (
+            "Movie imported. You can now rate it. "
+            "AI collaborative recommendations for this title will become available "
+            "after it accumulates sufficient user ratings in the catalog."
+        ),
+    }
+
+
+# ============================================================
+# 11. GET MOVIE BY DATABASE MOVIE_ID
 # ============================================================
 
 @router.get("/{movie_id}")

@@ -3,7 +3,7 @@ import "./MyList.css";
 import "../components/MovieCard.css";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getCurrentUser } from "../auth/auth";
+import { getCurrentUser, getScopedKey } from "../auth/auth";
 
 import { api } from "../api/client";
 
@@ -33,7 +33,7 @@ function MyList() {
     async function loadFavorites() {
       try {
         const data = await api.getFavorites();
-        if (isMounted && data?.favorites && data.favorites.length > 0) {
+        if (isMounted && data && Array.isArray(data.favorites)) {
           const formatted = data.favorites.map((f) => ({
             id: f.movie_id,
             numericId: f.movie_id,
@@ -45,15 +45,20 @@ function MyList() {
             info: (f.genres || "").split("|").filter(Boolean).slice(0, 2).join(" • "),
           }));
           setMovies(formatted);
+          // Cache to user-scoped storage
+          try {
+            localStorage.setItem(getScopedKey("myList"), JSON.stringify(formatted));
+          } catch (_) {}
           return;
         }
       } catch (error) {
-        console.warn("Unable to load favorites from API, using local storage:", error);
+        console.warn("Unable to load favorites from API, using scoped local storage:", error);
       }
 
+      // Only fall back to user's scoped local storage if API call completely failed
       try {
         const savedMovies = JSON.parse(
-          localStorage.getItem("myList") || "[]"
+          localStorage.getItem(getScopedKey("myList")) || "[]"
         );
         if (isMounted) setMovies(Array.isArray(savedMovies) ? savedMovies : []);
       } catch (error) {
@@ -80,7 +85,7 @@ function MyList() {
     );
 
     try {
-      localStorage.setItem("myList", JSON.stringify(updatedMovies));
+      localStorage.setItem(getScopedKey("myList"), JSON.stringify(updatedMovies));
       setMovies(updatedMovies);
     } catch (error) {
       console.error("Unable to update My List:", error);

@@ -21,9 +21,13 @@ export default function MovieCard({
     ? Number(tmdbRating).toFixed(1)
     : null;
 
-  const displayGenres = Array.isArray(genres)
-    ? genres.filter(Boolean).slice(0, 2).join(" • ")
-    : (typeof genres === "string" ? genres.split("|").filter(Boolean).slice(0, 2).join(" • ") : "");
+  const displayGenres = (Array.isArray(genres)
+    ? genres
+    : (typeof genres === "string" ? genres.split("|") : []))
+    .map((g) => (typeof g === "string" ? g.trim() : ""))
+    .filter((g) => Boolean(g) && g !== "(no genres listed)" && g.toUpperCase() !== "IMAX")
+    .slice(0, 2)
+    .join(" • ");
 
   const infoText = subtitle || [releaseYear, displayGenres].filter(Boolean).join(" • ");
 
